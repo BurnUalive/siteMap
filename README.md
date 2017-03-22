@@ -19,3 +19,5 @@ e.g https://www.zoho.com
 ### Domain Name
 
 e.g. zoho.com
+
+#### Thread count set to 2 by default
