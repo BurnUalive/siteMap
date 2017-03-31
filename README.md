@@ -11,11 +11,11 @@ Add path\to\lib folder to CLASSPATH environment variable
 
 
 ## Run
-'''
+```batch
 java JavaPageCrawler.JavaWebCrawlerRun -p project-name -u url -d domain-name -f
 cd project-name
 java JavaPageCrawler.JavaWebCrawlerRun -r
-'''
+```
 -f is flag to force the parser to only parse urls with subdomain = domain name entered
 
 ### Project Name Format
