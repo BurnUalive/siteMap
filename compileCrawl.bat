@@ -1,0 +1,1 @@
+mkdir lib | javac -d lib JavaPageCrawler\*.java

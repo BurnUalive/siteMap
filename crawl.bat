@@ -1,0 +1,1 @@
+java -cp lib JavaPageCrawler.JavaWebCrawlerRun -p %1 -u %2 -f

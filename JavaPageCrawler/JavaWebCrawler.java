@@ -1,57 +1,10 @@
+package JavaPageCrawler;
 import java.io.*;
 import java.nio.*;
 import java.nio.file.*;
 import java.util.*;
 class JavaWebCrawler{
-	private static String projectName = null;
-	private static String baseUrl = null;
-	public static void main(String[] args){
-		int argLength = args.length;
-		for(int i=0;i<argLength;i++){
-			if(args[i].equals("-p")){
-				if(args[i+1].indexOf("-")!=0){
-					projectName = args[i+1];
-				}else{
-					errorHandle(1,true);
-				}
-			}else if(args[i].equals("-u")){
-				if(args[i+1].indexOf("-")!=0){
-					baseUrl = args[i+1];
-				}else{
-					errorHandle(1,true);
-				}
-			}
-		}
-		init();
-		
-	}
-	public static void startFromSpider( String p, String bu){
-		projectName = p;
-		baseUrl = bu;
-		init();
-	}
-	// start up 
-	public static void init(){
-		makeDirs(projectName);
-		makeDirFiles();
-	}
-	// Make queue and crawled files
-	public static boolean makeDirFiles(){
-		String queuePath = projectName + "\\queue.txt";
-		String crawledPath = projectName + "\\crawled.txt";
-		int flag = 0;
-		if(!writeFile(queuePath,baseUrl)){
-			flag++;
-		}
-		if(!writeFile(crawledPath,"")){
-			flag++;
-		}
-		if(flag==2){
-			return true;
-		}else{
-			return false;
-		}
-	}
+	static ClassLoader loader = Thread.currentThread().getContextClassLoader();     
 	// makeDirectories 
 	public static boolean makeDirs(String path){
 		Path projectPath = Paths.get(path);
@@ -99,6 +52,7 @@ class JavaWebCrawler{
 		errorHandle(e,breakFromProgram,"");
 	}
 	public static void errorHandle(int e,boolean breakFromProgram,String errMsg){
+		JavaWebCrawlerSpider.ERROR = true;
 		if(e==1){
 			printLog("Argument error");
 		}else if(e==2){
@@ -170,6 +124,65 @@ class JavaWebCrawler{
 		while(it.hasNext()){
 			link = it.next();
 			appendToFile(path,link);
+		}
+	}
+	// delete a file 
+	public static boolean deleteFile(String path){
+		try{
+			return Files.deleteIfExists(Paths.get(path));
+		}catch(Exception e){
+			errorHandle("Delete file | " + e.getMessage());
+			e.printStackTrace();
+			return false;
+		}
+	}
+	// copy filepublic static boolean
+	public static void copyFile(String src,String dst){
+		try{
+			Files.copy(Paths.get(src),Paths.get(dst));
+		}catch(Exception e){
+			errorHandle("File Copy | " + e.getMessage());
+		}
+	}
+	public static void moveFile(String src,String dst){
+		try{
+			Files.move(Paths.get(src),Paths.get(dst));
+		}catch(Exception e){
+			errorHandle("File Copy | " + e.getMessage());
+		}
+	}
+	// properties file handle write
+	public static void setProperty(String property,String val,String path){
+		try{
+			Properties prop = new Properties();
+			InputStream in = loader.getResourceAsStream(path);
+			prop.load(in);
+			in.close();
+			prop.setProperty(property,val);
+			prop.store(new FileOutputStream(path),null);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	// init property files
+	public static void setProperties(Properties prop,String path){
+		try{
+			prop.store(new FileOutputStream(path),null);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	// properties file read
+	public static Properties getProperties(String path){
+		try{
+			Properties prop = new Properties();
+			InputStream in = new FileInputStream(System.getProperty("user.dir")+"\\"+path);
+			prop.load(in);
+			return prop;
+		}catch(Exception e){
+			e.printStackTrace();
+			errorHandle("ERROR: " + e.getMessage());
+			return null;
 		}
 	}
 }

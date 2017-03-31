@@ -20,4 +20,4 @@ e.g https://www.zoho.com
 
 e.g. zoho.com
 
-#### Thread count set to 2 by default
+TODO: Make it restart from last point

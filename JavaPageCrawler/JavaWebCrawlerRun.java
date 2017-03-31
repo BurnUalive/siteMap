@@ -1,3 +1,4 @@
+package JavaPageCrawler;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -6,12 +7,15 @@ class JavaWebCrawlerRun{
 	static String PROJECT_NAME="";
 	static String HOMEPAGE ="";
 	static String DOMAIN_NAME = "";
-	static String QUEUE_FILE = PROJECT_NAME + "/queue.txt";
-	static String CRAWLED_FILE = PROJECT_NAME + "/crawled.txt";
+	static String QUEUE_FILE = "temp\\queue.txt";
+	static String CRAWLED_FILE = "temp\\crawled.txt";
 	static int NUMBER_OF_THREADS = 2;
+	static boolean FORCE_SUB_DOMAIN = false;
 	static LinkedBlockingQueue<String> queue = new LinkedBlockingQueue<String>();
+	// run util
 	public static void main(String[] args){
 		int argLength = args.length;
+		boolean flag = false;
 		for(int i=0;i<argLength;i++){
 			if(args[i].equals("-p")){
 				if(args[i+1].indexOf("-")!=0){
@@ -31,12 +35,56 @@ class JavaWebCrawlerRun{
 				}else{
 					JavaWebCrawler.errorHandle(1,true);
 				}
+			}else if(args[i].equals("-r")){
+				flag = true;
+			}else if(args[i].equals("-f")){
+				FORCE_SUB_DOMAIN = true;
 			}
-			QUEUE_FILE = PROJECT_NAME + "/queue.txt";
-			CRAWLED_FILE = PROJECT_NAME + "/crawled.txt";
 		}
-		JavaWebCrawlerSpider jwcs = new JavaWebCrawlerSpider(PROJECT_NAME,HOMEPAGE, DOMAIN_NAME);
+		if(argLength==0){
+			flag=true;
+		}
+		if(flag){
+			restart();
+			startCrawl();
+		}else{
+			JavaWebCrawlerSetup.init(PROJECT_NAME,HOMEPAGE,FORCE_SUB_DOMAIN);
+			JavaWebCrawler.printLog("Project setup complete | " + PROJECT_NAME);
+		}
+	}
+	static void startCrawl(){
+		try{
+			Runtime r = Runtime.getRuntime();
+			Thread t = (Thread)new TaskKill();
+			r.addShutdownHook(t);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		JavaWebCrawlerSpider jwcs = new JavaWebCrawlerSpider(PROJECT_NAME,HOMEPAGE, DOMAIN_NAME,FORCE_SUB_DOMAIN);
 		crawl();
+	}
+	// restart handler
+	static void restart(){
+		try{
+		Properties prop = JavaWebCrawler.getProperties("res\\project.properties");
+		PROJECT_NAME = prop.getProperty("PROJECT_NAME");
+		HOMEPAGE = prop.getProperty("BASEURL");
+		DOMAIN_NAME = prop.getProperty("DOMAIN_NAME");
+		if(prop.getProperty("FORCE_SUB_DOMAIN").equals("TRUE")){
+			FORCE_SUB_DOMAIN = true;
+		}else{
+			FORCE_SUB_DOMAIN= false;
+		}
+		JavaWebCrawler.printLog("PROJECT_NAME | " + PROJECT_NAME);
+		JavaWebCrawler.printLog("HOMEPAGE | " + HOMEPAGE);
+		JavaWebCrawler.printLog("DOMAIN_NAME | " + DOMAIN_NAME);
+		JavaWebCrawler.printLog("FORCE_SUB_DOMAIN | " + FORCE_SUB_DOMAIN);
+		JavaWebCrawlerSetup.refreshProgress();
+		}catch(Exception e){
+			JavaWebCrawler.errorHandle("Restart | " + e.getMessage());
+		}
+		
 	}
 	// check for items in queue if so crawl
 	public static void crawl(){
@@ -63,7 +111,7 @@ class JavaWebCrawlerRun{
 			t.start();
 		}
 	}
-	
+	// Worker thread
 	static class JavaWebCrawlerThreads implements Runnable{
 		private Thread t;
 		private String threadName;
@@ -94,11 +142,16 @@ class JavaWebCrawlerRun{
 			JavaWebCrawler.printLog("Starting thread | " + threadName);
 			if(t==null){
 				t = new Thread(this,threadName);
-				//t.setDaemon(true);
 				t.start();
 			}
 		}
 		
+	}
+	// On program close threads
+	static class TaskKill extends Thread{
+		public void run(){
+			JavaWebCrawlerSpider.cleanUp();
+		}
 	}
 	
 }
